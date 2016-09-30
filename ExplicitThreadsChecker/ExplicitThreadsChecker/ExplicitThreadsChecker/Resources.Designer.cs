@@ -71,7 +71,7 @@ namespace ExplicitThreadsChecker {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; should be replaced with Task.Run(() =&gt; {1}).
+        ///   Looks up a localized string similar to &apos;{0}&apos; should be replaced with Task.Run.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectInfo xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
+  <ProjectName>ExplicitThreadsSmell</ProjectName>
+  <ProjectLanguage>C#</ProjectLanguage>
+  <ProjectType>Product</ProjectType>
+  <ProjectGuid>200cf36b-c016-41fe-be7c-ee5a3570c78b</ProjectGuid>
+  <FullPath>C:\Users\Markus\Documents\gitRepos\ExplicitThreadsChecker\ExplicitThreadsSmell\ExplicitThreadsSmell\ExplicitThreadsSmell.csproj</FullPath>
+  <IsExcluded>false</IsExcluded>
+  <AnalysisResults>
+    <AnalysisResult Id="FilesToAnalyze" Location="C:\Users\Markus\Documents\gitRepos\ExplicitThreadsChecker\ExplicitThreadsSmell\.sonarqube\out\\ExplicitThreadsSmell_AnyCPU_Debug_9918\FilesToAnalyze.txt" />
+  </AnalysisResults>
+  <AnalysisSettings>
+    <Property Name="sonar.cs.roslyn.reportFilePath">C:\Users\Markus\Documents\gitRepos\ExplicitThreadsChecker\ExplicitThreadsSmell\ExplicitThreadsSmell\bin\Debug\ExplicitThreadsSmell.exe.RoslynCA.json</Property>
+    <Property Name="sonar.stylecop.projectFilePath">C:\Users\Markus\Documents\gitRepos\ExplicitThreadsChecker\ExplicitThreadsSmell\ExplicitThreadsSmell\ExplicitThreadsSmell.csproj</Property>
+  </AnalysisSettings>
+</ProjectInfo>

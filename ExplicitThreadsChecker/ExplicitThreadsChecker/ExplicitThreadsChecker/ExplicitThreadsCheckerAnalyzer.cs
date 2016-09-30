@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.FindSymbols;
 
 namespace ExplicitThreadsChecker
 {
@@ -46,22 +47,151 @@ namespace ExplicitThreadsChecker
             if (threadSymbol == null) { return; }
             if (threadSymbol.MetadataName != "Thread") { return; }
 
+            FindSingleLineCodeSmell(context, root);
+            FindMultilineCodeSmellDirectAllocation(context, root);
+            FindMultilineCodeSmellDeclartion(context, root);
+        }
+
+
+        private void FindMultilineCodeSmellDeclartion(SyntaxNodeAnalysisContext context, SyntaxNode root)
+        {
+            if (!root.Ancestors().OfType<VariableDeclarationSyntax>().Any())
+            {
+                return;
+            }
+
+            var variableDeclartionNode = root.Ancestors().OfType<VariableDeclarationSyntax>().First();
+            if (variableDeclartionNode == null)
+            {
+                return;
+            }
+
+            var variables = variableDeclartionNode.Variables;
+
+            foreach (var variableDeclaratorSyntax in variables)
+            {
+                CheckThreadUsage(context, root, variableDeclaratorSyntax);
+            }
+            
+
+        }
+
+        private void CheckThreadUsage(SyntaxNodeAnalysisContext context, SyntaxNode root, VariableDeclaratorSyntax identifier)
+        {
+            var block = root.Ancestors().OfType<BlockSyntax>().First();
+            var references = block.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>().Where(i => i.Identifier.ToString() == identifier.Identifier.ToString());
+
+            bool logWarning = true;
+            foreach (var identifierNameSyntax in references)
+            {
+                if (identifierNameSyntax.Parent is LocalDeclarationStatementSyntax ||
+                    identifierNameSyntax.Parent is AssignmentExpressionSyntax)
+                {
+
+                }
+                else if (identifierNameSyntax.Parent is MemberAccessExpressionSyntax)
+                {
+                    var method = identifierNameSyntax.Parent as MemberAccessExpressionSyntax;
+                    var methodName = method.Name.ToString();
+                    if (methodName != "Start")
+                    {
+                        logWarning = false;
+                    }
+                }
+                else
+                {
+                    logWarning = false;
+                }
+            }
+
+
+            if (logWarning)
+            {
+                var fullexpression = root.Parent.Parent.Parent.ToString();
+                var diagn = Diagnostic.Create(Rule, identifier.GetLocation(), identifier.Identifier.ToString(), "");
+                context.ReportDiagnostic(diagn);
+            }
+        }
+
+
+        private bool FindMultilineCodeSmellDirectAllocation(SyntaxNodeAnalysisContext context, SyntaxNode root)
+        {
+            if (!root.Ancestors().OfType<VariableDeclaratorSyntax>().Any())
+            {
+                return false;
+            }
+
+            var variableDeclartionNode = root.Ancestors().OfType<VariableDeclaratorSyntax>().First();
+            if (variableDeclartionNode == null)
+            {
+                return false;
+            }
+
+            var variableName = variableDeclartionNode.Identifier;
+            var block = root.Ancestors().OfType<BlockSyntax>().First();
+            var references = block.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>().Where(i => i.Identifier.ToString() == variableName.ToString());
+
+            bool logWarning = true;
+            foreach (var identifierNameSyntax in references)
+            {
+                if (identifierNameSyntax.Parent is LocalDeclarationStatementSyntax ||
+                    identifierNameSyntax.Parent is AssignmentExpressionSyntax)
+                {
+
+                }
+                else if (identifierNameSyntax.Parent is MemberAccessExpressionSyntax)
+                {
+                    var method = identifierNameSyntax.Parent as MemberAccessExpressionSyntax;
+                    var methodName = method.Name.ToString();
+                    if (methodName != "Start")
+                    {
+                        logWarning = false;
+                    }
+                }
+                else
+                {
+                    logWarning = false;
+                }
+            }
+
+
+            if (logWarning)
+            {
+                var fullexpression = root.Parent.Parent.Parent.ToString();
+                var diagn = Diagnostic.Create(Rule, root.Parent.Parent.Parent.GetLocation(), variableName, "");
+                context.ReportDiagnostic(diagn);
+            }
+
+            return logWarning;
+
+        }
+
+        private static void FindSingleLineCodeSmell(SyntaxNodeAnalysisContext context, SyntaxNode root)
+        {
             var startNode = root.Parent.Parent.DescendantNodesAndSelf().OfType<IdentifierNameSyntax>().Last();
-            if (startNode == null) { return; }
+            if (startNode == null)
+            {
+                return;
+            }
 
             var startSymbol = context.SemanticModel.GetSymbolInfo(startNode).Symbol as IMethodSymbol;
-            if (startSymbol == null) { return; }
-            if (startSymbol.MetadataName != "Start") { return; }
+            if (startSymbol == null)
+            {
+                return;
+            }
+            if (startSymbol.MetadataName != "Start")
+            {
+                return;
+            }
 
             var argumentNode = root.Parent.DescendantNodesAndSelf().OfType<ArgumentSyntax>().First();
-            
+
             var argument = argumentNode.Expression;
             var fullexpression = root.Parent.Parent.Parent.ToString();
 
             var diagn = Diagnostic.Create(Rule, root.Parent.Parent.Parent.GetLocation(), fullexpression, argument);
-            
-            context.ReportDiagnostic(diagn);
 
+            context.ReportDiagnostic(diagn);
         }
     }
 }

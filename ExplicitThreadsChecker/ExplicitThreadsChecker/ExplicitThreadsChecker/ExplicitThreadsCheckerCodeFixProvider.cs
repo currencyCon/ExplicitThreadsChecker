@@ -33,30 +33,25 @@ namespace ExplicitThreadsChecker
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            // Get the root syntax node for the current document
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
-            // Get a reference to the diagnostic to fix
             var diagnostic = context.Diagnostics.First();
 
-            // Get the location in the code editor for the diagnostic
-            var diagnosticSpan = diagnostic.Location.SourceSpan;
-
-            // Find the syntax node on the span where there is a squiggle 
             var node = root.FindNode(context.Span);
 
-            // If the syntax node is not an IdentifierName return
             if (node is InvocationExpressionSyntax == false) { return; }
 
-            // Register a code action that invokes the fix on the current document 
-            context.RegisterCodeFix(CodeAction.Create(title: title, createChangedDocument: c => ReplaceThreadWithTask(context.Document, node, c), equivalenceKey: title), diagnostic);
+            context.RegisterCodeFix(CodeAction.Create(
+                    title: title, 
+                    createChangedDocument: c => ReplaceThreadWithTask(context.Document, node, c), 
+                    equivalenceKey: title), 
+                diagnostic);
         }
 
         private async Task<Document> ReplaceThreadWithTask(Document document, SyntaxNode node, CancellationToken cancellationToken)
         {
-            var root = await document.GetSyntaxRootAsync();
-            root = AddUsingSystemThreadingTasks(root);
-
+            var root = await document.GetSyntaxRootAsync(cancellationToken);
+            
             var argument = node.DescendantNodes().OfType<ArgumentSyntax>().First();
             InvocationExpressionSyntax invocationStatement;
             if (argument.ChildNodes().OfType<IdentifierNameSyntax>().Any())
@@ -70,8 +65,10 @@ namespace ExplicitThreadsChecker
                 invocationStatement = ReplaceLambda(lambda);
             }
             
-            
             var newRoot = root.ReplaceNode(node, invocationStatement);
+
+            UsingHandler handler = new UsingHandler();
+            newRoot = handler.AddUsingIfNotExists(newRoot, "System.Threading.Tasks");
             var newDocument = document.WithSyntaxRoot(newRoot);
 
             return newDocument;
@@ -79,10 +76,8 @@ namespace ExplicitThreadsChecker
 
         private InvocationExpressionSyntax ReplaceLambda(ParenthesizedLambdaExpressionSyntax lambda)
         {
-            var task = SyntaxFactory.IdentifierName("Task");
-            var run = SyntaxFactory.IdentifierName("Run");
-            var taskRunSyntax = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, task, run);
-            
+            var taskRunSyntax = CreateTaskRun();
+
             var argument = SyntaxFactory.Argument(lambda);
             var argumentList = SyntaxFactory.SeparatedList(new[] { argument });
             var invocationStatement = SyntaxFactory.InvocationExpression(taskRunSyntax, SyntaxFactory.ArgumentList(argumentList));
@@ -91,9 +86,7 @@ namespace ExplicitThreadsChecker
 
         private static InvocationExpressionSyntax ReplaceMethod(string methodName)
         {
-            var task = SyntaxFactory.IdentifierName("Task");
-            var run = SyntaxFactory.IdentifierName("Run");
-            var taskRunSyntax = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, task, run);
+            var taskRunSyntax = CreateTaskRun();
             var emptyParameterList = SyntaxFactory.ParameterList();
 
             var compute = SyntaxFactory.IdentifierName(methodName);
@@ -106,40 +99,13 @@ namespace ExplicitThreadsChecker
             return invocationStatement;
         }
 
-        private SyntaxNode AddUsingSystemThreadingTasks(SyntaxNode root)
+        private static MemberAccessExpressionSyntax CreateTaskRun()
         {
-            var compilationUnit = (CompilationUnitSyntax)root;
-            
-            var exists = compilationUnit.Usings.Any(u => u.Name.ToString() == "System.Threading.Tasks");
-            if (!exists)
-            {
-                var usingSystemThreadingTask = CreateUsingDirective("System.Threading.Tasks");
-                compilationUnit = compilationUnit.AddUsings(usingSystemThreadingTask);
-            }
-
-            return compilationUnit;
+            var task = SyntaxFactory.IdentifierName("Task");
+            var run = SyntaxFactory.IdentifierName("Run");
+            var taskRunSyntax = SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, task, run);
+            return taskRunSyntax;
         }
-
-
-        private UsingDirectiveSyntax CreateUsingDirective(string usingName)
-        {
-            NameSyntax qualifiedName = null;
-
-            foreach (var identifier in usingName.Split('.'))
-            {
-                var name = SyntaxFactory.IdentifierName(identifier);
-
-                if (qualifiedName != null)
-                {
-                    qualifiedName = SyntaxFactory.QualifiedName(qualifiedName, name);
-                }
-                else
-                {
-                    qualifiedName = name;
-                }
-            }
-            return SyntaxFactory.UsingDirective(qualifiedName);
-        }
-
+        
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using ExplicitThreadsChecker;
 
 namespace TestHelper
 {
@@ -77,6 +78,8 @@ namespace TestHelper
             var analyzerDiagnostics = GetSortedDiagnosticsFromDocuments(analyzer, new[] { document });
             var compilerDiagnostics = GetCompilerDiagnostics(document);
             var attempts = analyzerDiagnostics.Length;
+
+            //await RemoveUnusedUsings.RemoveUnusedImportDirectivesAsync(document, new CancellationToken());
 
             for (int i = 0; i < attempts; ++i)
             {
