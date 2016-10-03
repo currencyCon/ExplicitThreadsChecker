@@ -80,6 +80,15 @@ namespace ExplicitThreadsChecker {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;new Thread&apos; should be replaced with Task.Run.
+        /// </summary>
+        internal static string AnalyzerMessageFormatSingleLine {
+            get {
+                return ResourceManager.GetString("AnalyzerMessageFormatSingleLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Thread.Start shouldn&apos;t be used.
         /// </summary>
         internal static string AnalyzerTitle {

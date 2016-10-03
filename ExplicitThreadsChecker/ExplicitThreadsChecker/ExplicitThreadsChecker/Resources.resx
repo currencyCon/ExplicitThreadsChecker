@@ -125,6 +125,9 @@
     <value>'{0}' should be replaced with Task.Run</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
+  <data name="AnalyzerMessageFormatSingleLine" xml:space="preserve">
+    <value>'new Thread' should be replaced with Task.Run</value>
+  </data>
   <data name="AnalyzerTitle" xml:space="preserve">
     <value>Thread.Start shouldn't be used</value>
     <comment>The title of the diagnostic.</comment>

@@ -75,7 +75,7 @@ namespace ExplicitThreadsSmell
             var expected1 = new DiagnosticResult
             {
                 Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "new Thread(Compute).Start()"),
+                Message = "'new Thread' should be replaced with Task.Run",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
@@ -86,7 +86,7 @@ namespace ExplicitThreadsSmell
             var expected2 = new DiagnosticResult
             {
                 Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "new Thread(Compute).Start()"),
+                Message = "'new Thread' should be replaced with Task.Run",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
@@ -117,7 +117,7 @@ namespace ExplicitThreadsSmell
             var expected = new DiagnosticResult
             {
                 Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "new Thread(Compute).Start()"),
+                Message = "'new Thread' should be replaced with Task.Run",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
@@ -163,7 +163,7 @@ namespace ExplicitThreadsSmell
             var expected = new DiagnosticResult
             {
                 Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "new Thread(() => { int i = 10; i++;}).Start()"),
+                Message = "'new Thread' should be replaced with Task.Run",
                 Severity = DiagnosticSeverity.Warning,
                 Locations =
                     new[] {
@@ -201,200 +201,7 @@ namespace ExplicitThreadsSmell
             return new ExplicitThreadsCheckerAnalyzer();
         }
 
-
-
-        [TestMethod]
-        public void TestMultilineCodeSmell()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t;
-            t = new Thread(Compute);
-            t.Start();
-        }
-    }
-}";
-            var expected = new DiagnosticResult
-            {
-                Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "t"),
-                Severity = DiagnosticSeverity.Warning,
-                Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 10, 20)
-                        }
-            };
-
-            VerifyCSharpDiagnostic(test, expected);
-
-        }
-
-        [TestMethod]
-        public void TestMultilineCodeSmellDirectAssignment()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t = new Thread(Compute);
-            t.Start();
-        }
-    }
-}";
-            var expected = new DiagnosticResult
-            {
-                Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "t"),
-                Severity = DiagnosticSeverity.Warning,
-                Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 10, 20)
-                        }
-            };
-
-            VerifyCSharpDiagnostic(test, expected);
-
-        }
-
-        [TestMethod]
-        public void TestMultilineNoSmell()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t;
-            t = new Thread(Compute);
-            t.Start();
-            t.Join();
-        }
-    }
-}";
-
-            VerifyCSharpDiagnostic(test);
-
-        }
-
-        [TestMethod]
-        public void TestMultilineNoSmellMethod()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t;
-            t = new Thread(Compute);
-            t.Start();
-            Hallo(t);
-        }
-        private void Hallo(Thread thread)
-        {
-            throw new NotImplementedException();
-        }
-    }
-}";
-
-            VerifyCSharpDiagnostic(test);
-
-        }
-
-
-
-        [TestMethod]
-        public void TestMultilineCodeSmellMultiDeclaration()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t,j;
-            t = new Thread(Compute);
-            j = new Thread(Compute);
-            t.Start();
-            j.Start();
-        }
-    }
-}";
-            var expected1 = new DiagnosticResult
-            {
-                Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "t"),
-                Severity = DiagnosticSeverity.Warning,
-                Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 10, 20)
-                        }
-            };
-
-            var expected2 = new DiagnosticResult
-            {
-                Id = "ETC001",
-                Message = String.Format("'{0}' should be replaced with Task.Run", "j"),
-                Severity = DiagnosticSeverity.Warning,
-                Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 10, 22)
-                        }
-            };
-
-            VerifyCSharpDiagnostic(test, expected1, expected2);
-
-        }
-
-
-        [TestMethod]
-        public void TestMultilineCodeSmellMultiDeclarationNoSmell()
-        {
-            var test = @"
-using System.Threading;
-
-namespace ExplicitThreadsSmell
-{
-    class SimpleThread
-    {
-        public void Test1()
-        {
-            Thread t,j;
-            t = new Thread(Compute);
-            j = new Thread(Compute);
-            t.Start();
-            j.Start();
-            j.Join();
-            Compute(t);
-        }
-    }
-}";
-            VerifyCSharpDiagnostic(test);
-
-        }
-
+        
     }
 
 
