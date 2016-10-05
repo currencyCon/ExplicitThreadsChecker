@@ -29,7 +29,7 @@ namespace ExplicitThreadsSmell
             i++;
         }
 
-        private void Test3()
+        private void Test3(Thread ttt)
         {
             int i = 1;
             if (i == 1)
@@ -47,7 +47,7 @@ namespace ExplicitThreadsSmell
                 Thread t = new Thread(Compute);
                 
                 t.Start();
-                Hallo(t);
+                //Hallo(t);
             }
         }
 
@@ -57,6 +57,8 @@ namespace ExplicitThreadsSmell
             t.Start();
 
             Thread s, l;
+            Thread tttt;
+
         }
 
         public static void Main()

@@ -32,6 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ExplicitThreadsMultilineCheckerCodeFixProvider.cs" />
     <Compile Include="ExplicitThreadsMultilineCheckerAnalyzer.cs" />
     <Compile Include="ExplicitThreadsCheckerCodeFixProvider.cs" />
     <Compile Include="ExplicitThreadsCheckerAnalyzer.cs" />
@@ -41,6 +42,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="SyntaxNodeExtensions.cs" />
+    <Compile Include="TaskSyntaxHelper.cs" />
     <Compile Include="UsingDirectiveFactory.cs" />
     <Compile Include="UsingHandler.cs" />
   </ItemGroup>

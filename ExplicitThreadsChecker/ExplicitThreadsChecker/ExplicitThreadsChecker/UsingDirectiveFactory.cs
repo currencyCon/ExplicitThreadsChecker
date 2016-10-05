@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExplicitThreadsChecker
 {
-    class UsingDirectiveFactory
+    internal class UsingDirectiveFactory
     {
-        internal static UsingDirectiveSyntax CreateUsingDirective(string usingName)
+        internal static UsingDirectiveSyntax Create(string usingName)
         {
             NameSyntax qualifiedName = null;
 
