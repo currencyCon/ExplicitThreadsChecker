@@ -95,16 +95,6 @@ namespace ExplicitThreadsChecker
 
         private void RemoveDeclaration(string variableName, BlockSyntax block, DocumentEditor newRoot)
         {
-            /*var node = block.DescendantNodes()
-                .OfType<LocalDeclarationStatementSyntax>()
-                .SelectMany(
-                    e =>
-                        e.DescendantNodes()
-                            .OfType<VariableDeclaratorSyntax>()
-                            .Where(a => a.Identifier.ToString() == variableName))
-                .First()
-                .DescendantNodes()
-                .OfType<VariableDeclaratorSyntax>().First();*/
             var node = block.GetLocalDeclaredVariables().First(a => a.Identifier.ToString() == variableName);
             var nodeToDelete = node.AncestorsAndSelf().OfType<LocalDeclarationStatementSyntax>().First();
             newRoot.RemoveNode(nodeToDelete);
@@ -112,13 +102,8 @@ namespace ExplicitThreadsChecker
 
         private void RemoveVariableDeclartion(string variableName, SyntaxNode block, SyntaxEditor newRoot)
         {
-            var declaration = block.DescendantNodes()
-                .OfType<LocalDeclarationStatementSyntax>().SelectMany(
-                    e =>
-                        e.DescendantNodes()
-                            .OfType<VariableDeclaratorSyntax>()
-                            .Where(a => a.Identifier.ToString() == variableName))
-                .First()
+            var declaration = block.GetLocalDeclaredVariables()
+                .First(c => c.Identifier.ToString() == variableName)
                 .AncestorsAndSelf()
                 .OfType<LocalDeclarationStatementSyntax>().First();
 
@@ -153,14 +138,8 @@ namespace ExplicitThreadsChecker
         private bool IsOnlyDeclaredVariable(string variableName, SyntaxNode block)
         {
             return
-                block.DescendantNodes()
-                    .OfType<LocalDeclarationStatementSyntax>()
-                    .SelectMany(
-                        e =>
-                            e.DescendantNodes()
-                                .OfType<VariableDeclaratorSyntax>()
-                                .Where(a => a.Identifier.ToString() == variableName))
-                    .First()
+                block.GetLocalDeclaredVariables()
+                .First(c => c.Identifier.ToString() == variableName).Parent
                     .DescendantNodes()
                     .OfType<VariableDeclaratorSyntax>()
                     .Count() == 1;

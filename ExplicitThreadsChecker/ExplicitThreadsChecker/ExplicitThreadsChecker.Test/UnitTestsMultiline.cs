@@ -206,10 +206,155 @@ namespace ExplicitThreadsSmell
 
         }
 
+
+        [TestMethod]
+        public void TestThreadCodeFixMultilineDirectInstantition()
+        {
+            var test = @"
+using System.Threading;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Thread t = new Thread(Compute);
+            t.Start();
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "ETC002",
+                Message = "'t' should be replaced with Task.Run",
+                Severity = DiagnosticSeverity.Warning,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 11, 13)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+
+            var fixtest = @"
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Task.Run(() => Compute());
+        }
+    }
+}";
+            VerifyCSharpFix(test, fixtest, allowNewCompilerDiagnostics: true);
+        }
+
+        [TestMethod]
+        public void TestThreadCodeFixMultilineSeparateInstantition()
+        {
+            var test = @"
+using System.Threading;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Thread t;
+            t = new Thread(Compute);
+            t.Start();
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "ETC002",
+                Message = "'t' should be replaced with Task.Run",
+                Severity = DiagnosticSeverity.Warning,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 12, 13)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+
+            var fixtest = @"
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Task.Run(() => Compute());
+        }
+    }
+}";
+            VerifyCSharpFix(test, fixtest, allowNewCompilerDiagnostics: true);
+        }
+
+
+        [TestMethod]
+        public void TestThreadCodeFixMultilineMultiDeclaration()
+        {
+            var test = @"
+using System.Threading;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Thread t,f;
+            t = new Thread(Compute);
+            t.Start();
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "ETC002",
+                Message = "'t' should be replaced with Task.Run",
+                Severity = DiagnosticSeverity.Warning,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 12, 13)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+
+            var fixtest = @"
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ExplicitThreadsSmell
+{
+    class SimpleThread
+    {
+        public void Test1()
+        {
+            Thread f;
+            Task.Run(() => Compute());
+        }
+    }
+}";
+            VerifyCSharpFix(test, fixtest, allowNewCompilerDiagnostics: true);
+        }
+
         protected override CodeFixProvider GetCSharpCodeFixProvider()
         {
-            //return new ExplicitThreadsCheckerCodeFixProvider();
-            return null;
+            return new ExplicitThreadsMultilineCheckerCodeFixProvider();
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
