@@ -17,6 +17,11 @@ namespace ExplicitThreadsChecker
                 .SelectMany(b => b.DescendantNodes().OfType<VariableDeclaratorSyntax>());
         }
 
+        public static VariableDeclaratorSyntax SingleVariable(this IEnumerable<VariableDeclaratorSyntax> variables,
+            string variableName)
+        {
+            return variables.First(c => c.Identifier.ToString() == variableName);
+        } 
 
     }
 }

@@ -54,7 +54,7 @@ namespace ExplicitThreadsChecker
             var threadArgument = FindThreadArgument(variableName, block);
             if (threadArgument == null)
             {
-                return null;
+                return document;
             }
 
             var invocationStatement = TaskSyntaxHelper.CreateInvocationStatement(threadArgument);
@@ -65,16 +65,21 @@ namespace ExplicitThreadsChecker
             RemoveThreadingCode(variableName, block, documentEditor);
 
             var newDocument = documentEditor.GetChangedDocument();
-            var newSyntaxRoot = await newDocument.GetSyntaxRootAsync(cancellationToken);
-            newSyntaxRoot = UsingHandler.AddUsingIfNotExists(newSyntaxRoot, TaskUsing);
-            newDocument = document.WithSyntaxRoot(newSyntaxRoot);
+            newDocument = await AddUsingsToDocument(newDocument);
 
             return newDocument;
         }
 
+        private static async Task<Document> AddUsingsToDocument(Document document)
+        {
+            var newSyntaxRoot = await document.GetSyntaxRootAsync();
+            newSyntaxRoot = UsingHandler.AddUsingIfNotExists(newSyntaxRoot, TaskUsing);
+            return document.WithSyntaxRoot(newSyntaxRoot);
+        }
+
         private void RemoveThreadingCode(string variableName, BlockSyntax block, DocumentEditor documentEditor)
         {
-            if (IsDeclaredSeparatly(variableName, block))
+            if (IsThreadDeclaredSeparatly(variableName, block))
             {
                 if (IsOnlyDeclaredVariable(variableName, block))
                 {
@@ -93,45 +98,44 @@ namespace ExplicitThreadsChecker
         }
 
 
-        private void RemoveDeclaration(string variableName, BlockSyntax block, DocumentEditor newRoot)
+        private void RemoveDeclaration(string variableName, BlockSyntax block, DocumentEditor editor)
         {
-            var node = block.GetLocalDeclaredVariables().First(a => a.Identifier.ToString() == variableName);
+            var node = block.GetLocalDeclaredVariables().SingleVariable(variableName);
             var nodeToDelete = node.AncestorsAndSelf().OfType<LocalDeclarationStatementSyntax>().First();
-            newRoot.RemoveNode(nodeToDelete);
+            editor.RemoveNode(nodeToDelete);
         }
 
-        private void RemoveVariableDeclartion(string variableName, SyntaxNode block, SyntaxEditor newRoot)
+        private void RemoveVariableDeclartion(string variableName, SyntaxNode block, SyntaxEditor editor)
         {
-            var declaration = block.GetLocalDeclaredVariables()
-                .First(c => c.Identifier.ToString() == variableName)
+            var declaredVariables = block.GetLocalDeclaredVariables()
+                .SingleVariable(variableName)
                 .AncestorsAndSelf()
                 .OfType<LocalDeclarationStatementSyntax>().First();
 
-            var variableNode =
-                declaration
+            var variableNodeToRemove =
+                declaredVariables
                     .DescendantNodes()
-                    .OfType<VariableDeclaratorSyntax>().First(v => v.Identifier.ToString() == variableName);
+                    .OfType<VariableDeclaratorSyntax>().SingleVariable(variableName);
 
-            var newDeclaration = declaration.RemoveNode(variableNode, SyntaxRemoveOptions.KeepEndOfLine);
-            newRoot.ReplaceNode(declaration, newDeclaration);
+            var newDeclaration = declaredVariables.RemoveNode(variableNodeToRemove, SyntaxRemoveOptions.KeepEndOfLine);
+            editor.ReplaceNode(declaredVariables, newDeclaration);
         }
 
-        private void RemoveDirectInstantiation(string variableName, SyntaxNode block, SyntaxEditor newRoot)
+        private void RemoveDirectInstantiation(string variableName, SyntaxNode block, SyntaxEditor editor)
         {
-            var node = block.GetLocalDeclaredVariables()
-                .First(c => c.Identifier.ToString() == variableName);
+            var node = block.GetLocalDeclaredVariables().SingleVariable(variableName);
             var nodeToDelete = node.AncestorsAndSelf().OfType<LocalDeclarationStatementSyntax>().First();
-            newRoot.RemoveNode(nodeToDelete);
+            editor.RemoveNode(nodeToDelete);
         }
 
-        private void RemoveSeparateInstantiation(string variableName, SyntaxNode block, SyntaxEditor newRoot)
+        private void RemoveSeparateInstantiation(string variableName, SyntaxNode block, SyntaxEditor editor)
         {
             var node = block
                 .DescendantNodes()
                 .OfType<AssignmentExpressionSyntax>()
                 .First(a => a.Left.ToString() == variableName).Parent;
             var nodeToDelete = node.AncestorsAndSelf().OfType<ExpressionStatementSyntax>().First();
-            newRoot.RemoveNode(nodeToDelete);
+            editor.RemoveNode(nodeToDelete);
         }
 
 
@@ -139,13 +143,13 @@ namespace ExplicitThreadsChecker
         {
             return
                 block.GetLocalDeclaredVariables()
-                .First(c => c.Identifier.ToString() == variableName).Parent
+                .SingleVariable(variableName).Parent
                     .DescendantNodes()
                     .OfType<VariableDeclaratorSyntax>()
                     .Count() == 1;
         }
 
-        private bool IsDeclaredSeparatly(string variableName, SyntaxNode block)
+        private bool IsThreadDeclaredSeparatly(string variableName, SyntaxNode block)
         {
             return !
                 block.DescendantNodes()
