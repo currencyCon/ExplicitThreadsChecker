@@ -3,14 +3,22 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Threading.Tasks;
 using TestHelper;
 using ExplicitThreadsChecker;
+using Microsoft.CSharp.RuntimeBinder;
 
 namespace ExplicitThreadsChecker.Test
 {
     [TestClass]
     public class UnitTest : CodeFixVerifier
     {
+
+        [AssemblyInitialize]
+        public static void InitializeReferencedAssemblies(TestContext context)
+        {
+            CSharpArgumentInfo dummy;
+        }
 
         //No diagnostics expected to show up
         [TestMethod]
@@ -124,7 +132,7 @@ namespace ExplicitThreadsSmell
                             new DiagnosticResultLocation("Test0.cs", 10, 13)
                         }
             };
-
+            
             VerifyCSharpDiagnostic(test, expected);
 
             var fixtest = @"
@@ -142,6 +150,11 @@ namespace ExplicitThreadsSmell
     }
 }";
             VerifyCSharpFix(test, fixtest, allowNewCompilerDiagnostics: true);
+        }
+
+        private int Compute()
+        {
+            throw new NotImplementedException();
         }
 
         [TestMethod]
